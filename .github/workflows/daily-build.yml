@@ -1,0 +1,69 @@
+name: Deploy to GitHub Pages
+
+on:
+  # Trigger the workflow every time you push to the `main` branch
+  push:
+    branches: ["main"]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  # Also run on schedule (for daily content updates)
+  schedule:
+    - cron: '0 0 * * *'
+
+# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+# Allow only one concurrent deployment, skipping runs queued between the run in-progress and latest queued.
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  # Single deploy job since we're just deploying static content
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "18"
+
+      - name: Run Content Build Script
+        run: node scripts/build.js
+
+      - name: Commit Content Updates (if any)
+        run: |
+          git config --global user.name "GitHub Action Bot"
+          git config --global user.email "bot@github.com"
+          git add data/articles.json sitemap.xml
+          # Only commit if there are changes
+          if [[ -n $(git status -s) ]]; then
+            git commit -m "Auto-update content: $(date +'%Y-%m-%d')"
+            git push
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+        with:
+          enablement: true # Fix for "Get Pages site failed" error
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Upload entire repository
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
