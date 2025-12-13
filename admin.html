@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Site Admin - Offline CMS</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background: #0f172a; color: #f8fafc; }
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col overflow-hidden">
+    
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-950">
+        <div class="bg-slate-900 p-8 rounded-2xl border border-slate-800 shadow-2xl w-full max-w-md text-center">
+            <div class="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg border border-slate-700">
+                <i data-lucide="lock" class="w-8 h-8 text-blue-500"></i>
+            </div>
+            <h2 class="text-2xl font-bold mb-2 text-white">Admin Login</h2>
+            <p class="text-slate-500 text-sm mb-6">Offline Content Management System</p>
+            <input type="password" id="password-input" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white mb-4 focus:ring-2 focus:ring-blue-600 outline-none text-center" placeholder="Enter Password">
+            <button onclick="app.checkLogin()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 rounded-lg transition-colors shadow-lg shadow-blue-600/20">Login</button>
+            <p id="error-msg" class="text-red-500 text-sm mt-4 hidden">Incorrect Password</p>
+            <p class="text-[10px] text-slate-600 mt-6">Default: 1234</p>
+        </div>
+    </div>
+
+    <!-- MAIN DASHBOARD -->
+    <div id="dashboard" class="hidden flex h-screen bg-slate-950">
+        
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-slate-900 border-r border-slate-800 flex flex-col p-4 shrink-0 shadow-xl z-20">
+            <div class="px-2 mb-8 mt-2">
+                <h1 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i data-lucide="layout-dashboard" class="text-blue-500"></i> CMS Panel
+                </h1>
+                <p class="text-[10px] text-slate-500 mt-1 uppercase tracking-wider font-bold">Dynamic Offline Mode</p>
+            </div>
+            
+            <nav class="space-y-2 flex-grow">
+                <button onclick="app.switchTab('overview')" id="nav-overview" class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="pie-chart" class="w-5 h-5"></i> Overview
+                </button>
+                <button onclick="app.switchTab('articles')" id="nav-articles" class="w-full flex items-center gap-3 px-3 py-3 rounded-xl text-sm font-medium transition-all text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="file-text" class="w-5 h-5"></i> Articles
+                    <span id="badge-articles" class="ml-auto bg-slate-800 text-slate-400 text-[10px] px-2 py-0.5 rounded-full font-bold">0</span>
+                </button>
+            </nav>
+
+            <div class="mt-auto pt-6 border-t border-slate-800">
+                <button onclick="location.reload()" class="flex items-center gap-2 text-xs text-red-400 hover:text-red-300 font-bold px-2 w-full justify-center py-2 hover:bg-red-900/10 rounded-lg transition-colors">
+                    <i data-lucide="log-out" class="w-4 h-4"></i> Logout
+                </button>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <main class="flex-grow flex flex-col min-w-0 bg-slate-950 relative overflow-hidden">
+            <!-- Header... -->
+            <header class="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-sm sticky top-0 z-10">
+                <div id="page-title" class="font-bold text-white text-lg">Dashboard</div>
+                <div class="flex items-center gap-4">
+                     <a href="index.html" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-2 transition-colors border border-slate-700">
+                        <i data-lucide="external-link" class="w-3 h-3"></i> View Site
+                     </a>
+                </div>
+            </header>
+
+            <!-- CONTENT SCROLL AREA -->
+            <div class="flex-grow overflow-y-auto custom-scrollbar p-8">
+                <!-- Overview Tab... -->
+                <div id="tab-overview" class="tab-content hidden animate-in fade-in slide-in-from-bottom-4 duration-300">
+                    <!-- Stats... -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                        <div class="bg-gradient-to-br from-blue-900/20 to-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden group">
+                            <div class="absolute right-0 top-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity"><i data-lucide="file-text" class="w-24 h-24 text-blue-500"></i></div>
+                            <div class="text-slate-400 text-sm font-bold mb-2">Total Articles</div>
+                            <div class="text-4xl font-bold text-white mb-2" id="stat-articles">0</div>
+                            <div class="text-xs text-blue-400 font-medium" id="stat-scheduled">Loading...</div>
+                        </div>
+                    </div>
+                    <!-- Download buttons... -->
+                    <div class="flex gap-4 justify-center mt-12">
+                         <button onclick="app.saveData('database')" class="bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-lg text-sm font-bold transition-colors border border-slate-700">Download database.json</button>
+                    </div>
+                </div>
+
+                <!-- ARTICLES TAB (Updated with Date) -->
+                <div id="tab-articles" class="tab-content hidden h-full flex flex-col">
+                    <div class="flex justify-between items-center mb-6 sticky top-0 bg-slate-950 py-4 z-10 border-b border-slate-800/50">
+                        <h2 class="text-2xl font-bold text-white">Articles Management</h2>
+                        <button onclick="app.saveData('database')" class="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg text-sm font-bold flex items-center gap-2 shadow-lg shadow-green-900/20 transition-all transform hover:-translate-y-0.5">
+                            <i data-lucide="download" class="w-4 h-4"></i> Save & Download JSON
+                        </button>
+                    </div>
+                    <div class="grid grid-cols-1 gap-4" id="articles-list">
+                        <!-- JS Injected -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- MODAL EDIT ARTICLE -->
+    <div id="modal-article" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm hidden items-center justify-center p-4">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-2xl border border-slate-700 shadow-2xl flex flex-col max-h-[90vh]">
+            <div class="p-6 border-b border-slate-800 flex justify-between items-center">
+                <h3 class="font-bold text-white text-lg">Edit Article</h3>
+                <button onclick="document.getElementById('modal-article').classList.add('hidden')" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-6 h-6"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar space-y-4">
+                <input type="hidden" id="edit-art-idx">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Title</label>
+                        <input type="text" id="edit-art-title" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 mb-1">Publish Date (YYYY-MM-DD)</label>
+                        <input type="date" id="edit-art-date" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none">
+                    </div>
+                </div>
+                 <div>
+                    <label class="block text-xs font-bold text-slate-500 mb-1">Intro</label>
+                    <textarea id="edit-art-intro" class="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white focus:border-blue-500 outline-none h-24"></textarea>
+                </div>
+            </div>
+            <div class="p-6 border-t border-slate-800 flex justify-end gap-3 bg-slate-900 rounded-b-2xl">
+                <button onclick="document.getElementById('modal-article').classList.add('hidden')" class="px-4 py-2 rounded-lg text-slate-400 hover:bg-slate-800 font-bold">Cancel</button>
+                <button onclick="app.saveArticleEdit()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-bold">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const app = {
+            password: "1234",
+            data: { products: [], articles: [], config: {} },
+            activeTab: 'overview',
+
+            init: function() {
+                lucide.createIcons();
+            },
+
+            checkLogin: function() {
+                const input = document.getElementById('password-input').value;
+                if(input === this.password) {
+                    document.getElementById('login-screen').classList.add('hidden');
+                    document.getElementById('dashboard').classList.remove('hidden');
+                    this.loadAllData();
+                } else {
+                    document.getElementById('error-msg').classList.remove('hidden');
+                }
+            },
+
+            loadAllData: async function() {
+                try {
+                    // Try loading database.json first (source of truth), else fallback to articles.json
+                    const db = await fetch('data/database.json').then(r => r.ok ? r.json() : null).catch(()=>null);
+                    const art = await fetch('data/articles.json').then(r => r.ok ? r.json() : []).catch(()=>[]);
+                    
+                    this.data.articles = db || art;
+                    
+                    const [p, c] = await Promise.all([
+                        fetch('data/products.json').then(r => r.ok ? r.json() : []).catch(()=>[]),
+                        fetch('data/config.json').then(r => r.ok ? r.json() : {}).catch(()=>({}))
+                    ]);
+                    this.data.products = p;
+                    this.data.config = c;
+                    this.renderAll();
+                } catch(e) {
+                    alert('Error loading data files. Ensure you are running this on a server environment (even local).');
+                }
+            },
+
+            switchTab: function(tab) {
+                this.activeTab = tab;
+                document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+                document.getElementById('tab-' + tab).classList.remove('hidden');
+                document.getElementById('tab-' + tab).classList.add('block');
+                
+                // Update Nav Styles
+                ['overview','articles'].forEach(t => {
+                    const btn = document.getElementById('nav-' + t);
+                    if (btn) {
+                        if(t === tab) {
+                            btn.classList.add('bg-blue-600','text-white','shadow-lg');
+                            btn.classList.remove('text-slate-400','hover:bg-slate-800');
+                        } else {
+                            btn.classList.remove('bg-blue-600','text-white','shadow-lg');
+                            btn.classList.add('text-slate-400','hover:bg-slate-800');
+                        }
+                    }
+                });
+            },
+
+            renderAll: function() {
+                // Overview
+                document.getElementById('stat-articles').textContent = this.data.articles.length;
+                document.getElementById('badge-articles').textContent = this.data.articles.length;
+                
+                // Count Scheduled
+                const now = new Date();
+                const visible = this.data.articles.filter(a => !a.publishDate || new Date(a.publishDate) <= now).length;
+                const scheduled = this.data.articles.length - visible;
+                document.getElementById('stat-scheduled').textContent = `${visible} Live / ${scheduled} Scheduled`;
+
+                this.renderArticles();
+                lucide.createIcons();
+            },
+
+            renderArticles: function() {
+                const container = document.getElementById('articles-list');
+                const now = new Date();
+                
+                container.innerHTML = this.data.articles.map((art, idx) => {
+                    const pubDate = art.publishDate ? new Date(art.publishDate) : new Date(0);
+                    const isFuture = pubDate > now;
+                    const dateStr = art.publishDate || 'Immediate';
+                    
+                    return `
+                    <div class="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center gap-4 hover:border-slate-600 transition-colors group">
+                        <div class="w-16 h-16 bg-slate-950 rounded-lg overflow-hidden shrink-0 border border-slate-800 relative">
+                            ${art.image ? `<img src="${art.image}" class="w-full h-full object-cover">` : `<div class="w-full h-full flex items-center justify-center text-slate-700"><i data-lucide="image"></i></div>`}
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] font-bold uppercase ${isFuture ? 'text-orange-400 bg-orange-900/20' : 'text-green-400 bg-green-900/20'} px-2 py-0.5 rounded">
+                                    ${isFuture ? 'Scheduled' : 'Live'}
+                                </span>
+                                <span class="text-[10px] text-slate-500">${dateStr}</span>
+                            </div>
+                            <h3 class="font-bold text-white text-sm truncate">${art.title}</h3>
+                            <p class="text-xs text-slate-500 truncate">${art.intro ? art.intro.substring(0,100) : ''}...</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button onclick="app.openArticleEdit(${idx})" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-slate-400 hover:text-white transition-colors border border-slate-700" title="Edit">
+                                <i data-lucide="edit-3" class="w-4 h-4"></i>
+                            </button>
+                            <button onclick="app.deleteArticle(${idx})" class="p-2 bg-slate-800 hover:bg-red-900/20 rounded-lg text-slate-400 hover:text-red-400 transition-colors border border-slate-700" title="Delete">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `}).join('');
+                lucide.createIcons();
+            },
+
+            openArticleEdit: function(idx) {
+                const art = this.data.articles[idx];
+                document.getElementById('edit-art-idx').value = idx;
+                document.getElementById('edit-art-title').value = art.title;
+                document.getElementById('edit-art-date').value = art.publishDate || '';
+                document.getElementById('edit-art-intro').value = art.intro;
+                document.getElementById('modal-article').classList.remove('hidden');
+                document.getElementById('modal-article').classList.add('flex');
+            },
+
+            saveArticleEdit: function() {
+                const idx = document.getElementById('edit-art-idx').value;
+                this.data.articles[idx].title = document.getElementById('edit-art-title').value;
+                this.data.articles[idx].publishDate = document.getElementById('edit-art-date').value;
+                this.data.articles[idx].intro = document.getElementById('edit-art-intro').value;
+                document.getElementById('modal-article').classList.add('hidden');
+                document.getElementById('modal-article').classList.remove('flex');
+                this.renderArticles();
+                this.renderAll(); // Update stats
+            },
+
+            saveData: function(type) {
+                // If type is database, we save to database.json (source of truth)
+                // In a real app, this would POST to a server. Here we download.
+                const d = this.data.articles; 
+                const filename = 'database.json';
+                const blob = new Blob([JSON.stringify(d, null, 2)], {type: 'application/json'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                a.click();
+            },
+            
+            deleteArticle: function(idx) {
+                if(confirm('Delete this article?')) {
+                    this.data.articles.splice(idx, 1);
+                    this.renderAll();
+                }
+            }
+        };
+
+        app.init();
+    </script>
+</body>
+</html>
